@@ -1,7 +1,7 @@
 import random
 import string
 from sqlalchemy.orm import Session
-import models, schemas
+from . import models, schemas
 
 def generate_short_code(length=6):
     chars = string.ascii_letters + string.digits
