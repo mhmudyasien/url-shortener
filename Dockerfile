@@ -6,7 +6,7 @@ WORKDIR /app
 # Install build dependencies
 RUN apk add --no-cache gcc musl-dev libffi-dev
 
-# Upgrade pip and setuptools to fix Python package vulnerabilities
+# Upgrade pip and setuptools to fix Python package vulnerabilities during build
 RUN pip install --no-cache-dir --upgrade pip setuptools wheel
 
 # Create virtual environment
@@ -32,6 +32,9 @@ COPY --from=builder /opt/venv /opt/venv
 
 # Enable virtual environment
 ENV PATH="/opt/venv/bin:$PATH"
+
+# Security: Remove pip and setuptools from runtime as they are not needed and contain vulnerabilities
+RUN pip uninstall -y pip setuptools
 
 # Copy application code
 COPY app/ ./app/
