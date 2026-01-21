@@ -25,6 +25,9 @@ RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 # Upgrade system packages
 RUN apk update && apk upgrade --no-cache
 
+# Security: Upgrade system-level pip and setuptools to fix vulnerabilities in /usr/local
+RUN pip install --no-cache-dir --upgrade pip setuptools
+
 # Copy virtual environment from builder
 COPY --from=builder /opt/venv /opt/venv
 

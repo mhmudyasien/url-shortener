@@ -1,5 +1,5 @@
 fastapi
-pip>=24.0
+pip>=25.3
 setuptools>=70.0
 uvicorn
 sqlalchemy
