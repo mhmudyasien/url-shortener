@@ -1,33 +1,31 @@
 # Stage 1: Builder
-FROM python:3.11-slim as builder
+FROM python:3.11-alpine as builder
 
 WORKDIR /app
 
-# Upgrade system packages (security)
-RUN apt-get update && apt-get upgrade -y && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
+# Install build dependencies
+RUN apk add --no-cache gcc musl-dev libffi-dev
 
-# Install build dependencies and create virtual environment
+# Upgrade pip and setuptools to fix Python package vulnerabilities
 RUN pip install --no-cache-dir --upgrade pip setuptools wheel
-RUN python -m venv /opt/venv
 
-# Activate virtual environment for installation
+# Create virtual environment
+RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Stage 2: Runtime
-FROM python:3.11-slim
+FROM python:3.11-alpine
 
 WORKDIR /app
 
 # Create a non-root user
-RUN groupadd -r appuser && useradd -r -g appuser appuser
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
-# Upgrade system packages (security for runtime)
-RUN apt-get update && apt-get upgrade -y && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
+# Upgrade system packages to fix OS vulnerabilities
+RUN apk update && apk upgrade --no-cache
 
 # Copy virtual environment from builder
 COPY --from=builder /opt/venv /opt/venv
@@ -39,7 +37,7 @@ ENV PATH="/opt/venv/bin:$PATH"
 COPY app/ ./app/
 
 # Set ownership to non-root user
-RUN chown -R appuser:appuser /app
+RUN chown -R appuser:appgroup /app
 
 # Switch to non-root user
 USER appuser
