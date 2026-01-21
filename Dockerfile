@@ -10,7 +10,12 @@ RUN apk add --no-cache gcc musl-dev libffi-dev
 RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
-# Install application dependencies (including pip/setuptools upgrades from requirements.txt)
+# CRITICAL: Upgrade pip and setuptools INSIDE the venv immediately
+# This ensures that when we run the next command, it uses the secure pip version
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel
+
+# Install application dependencies
+# requirements.txt contains pip>=25.3, but the manual upgrade above ensures it's set first
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
@@ -22,10 +27,11 @@ WORKDIR /app
 # Create a non-root user
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
-# Upgrade system packages
+# Upgrade system packages to fix OS vulnerabilities
 RUN apk update && apk upgrade --no-cache
 
 # Security: Upgrade system-level pip and setuptools to fix vulnerabilities in /usr/local
+# We do this specifically for the system python usage, even though the app uses venv
 RUN pip install --no-cache-dir --upgrade pip setuptools
 
 # Copy virtual environment from builder
