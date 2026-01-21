@@ -6,13 +6,11 @@ WORKDIR /app
 # Install build dependencies
 RUN apk add --no-cache gcc musl-dev libffi-dev
 
-# Upgrade pip and setuptools to fix Python package vulnerabilities during build
-RUN pip install --no-cache-dir --upgrade pip setuptools wheel
-
 # Create virtual environment
 RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
+# Install application dependencies (including pip/setuptools upgrades from requirements.txt)
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
@@ -24,7 +22,7 @@ WORKDIR /app
 # Create a non-root user
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
-# Upgrade system packages to fix OS vulnerabilities
+# Upgrade system packages
 RUN apk update && apk upgrade --no-cache
 
 # Copy virtual environment from builder
@@ -32,9 +30,6 @@ COPY --from=builder /opt/venv /opt/venv
 
 # Enable virtual environment
 ENV PATH="/opt/venv/bin:$PATH"
-
-# Security: Remove pip and setuptools from runtime as they are not needed and contain vulnerabilities
-RUN pip uninstall -y pip setuptools
 
 # Copy application code
 COPY app/ ./app/

@@ -1,4 +1,6 @@
 fastapi
+pip>=24.0
+setuptools>=70.0
 uvicorn
 sqlalchemy
 mysql-connector-python
